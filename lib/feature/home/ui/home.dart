@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:grocery_app/feature/cart/ui/cart.dart';
 import 'package:grocery_app/feature/home/bloc/home_bloc.dart';
-import 'package:grocery_app/feature/wishlist/ui/Wishlist.dart';
+import 'package:grocery_app/feature/home/ui/product_tile_widget.dart';
+import 'package:grocery_app/feature/wishlist/ui/wishlist.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -22,49 +23,57 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return BlocConsumer<HomeBloc, HomeState>(
       bloc: HomeBloc(),
-           listenWhen: (previous, current) => current is homeActionState,
-           buildWhen: (previous, current) => current is !homeActionState,
+      listenWhen: (previous, current) => current is HomeActionState,
+      buildWhen: (previous, current) => current is! HomeActionState,
       listener: (context, state) {
-        if (state is homeNavitageToCartPageActionSate) {
+        if (state is HomeNavitageToCartPageActionSate) {
           Navigator.push(
-              context, MaterialPageRoute(builder: (context) => Cart()));
-        } else if (state is homeNavitageToWishlistPageActionSate) {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => Wishlist()));
+              context, MaterialPageRoute(builder: (context) => const Cart()));
+        } else if (state is HomeNavitageToWishlistPageActionSate) {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const Wishlist()));
         }
       },
       builder: (context, state) {
         switch (state.runtimeType) {
-          case homeLoadingState:
-            return Scaffold(
+          case const (HomeLoadingState):
+            return const Scaffold(
                 body: Center(
               child: CircularProgressIndicator(),
             ));
-          case homeLoadedSuccessState:
+
+          case const (HomeLoadedSuccessState):
+            final successState = state as HomeLoadedSuccessState;
             return Scaffold(
               appBar: AppBar(
                 centerTitle: true,
+                backgroundColor: Colors.teal,
                 title: const Text('KIZO SHOPPING MALL'),
                 actions: [
                   IconButton(
                       onPressed: () {
                         homeBloc.add(HomeWishlistButtonNavigateEvent());
                       },
-                      icon: Icon(Icons.favorite)),
+                      icon: const Icon(Icons.favorite)),
                   IconButton(
                       onPressed: () {
                         homeBloc.add(HomeProductCartButtonClickedEvent());
                       },
-                      icon: Icon(Icons.shopping_basket))
+                      icon: const Icon(Icons.shopping_basket))
                 ],
               ),
+              body: ListView.builder(
+                  itemCount: successState.products.length,
+                  itemBuilder: (context, index) {
+                    return ProductTleWidget(
+                        productDataModel: successState.products[index]);
+                  }),
             );
-          case homeErrorState:
-            return Scaffold(
-              body: Center(
-                child: Text('error'),
-              ),
-            );
+          // ignore: type_literal_in_constant_pattern
+          case HomeErrorState:
+            return const Scaffold(body: Center(child: Text('error')));
+          default:
+            return const SizedBox();
         }
       },
     );
